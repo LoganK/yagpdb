@@ -17,6 +17,7 @@ services:
     image: caskd/yagpdb
     restart: unless-stopped
     command:
+      - "/app/yagpdb"
       - "-all"
       - "-pa"
       - "-exthttps=true"

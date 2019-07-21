@@ -31,6 +31,11 @@ RUN apk --no-cache add ca-certificates
 # Add ffmpeg for soundboard support
 RUN apk --no-cache add ffmpeg
 
+RUN apk add --no-cache su-exec libcap
+RUN adduser -D yagpdb
+
+COPY ./docker-entrypoint.sh /app/
+
 # Handle templates for plugins automatically
 COPY --from=builder /go/src/github.com/jonas747/yagpdb/*/assets/*.html templates/plugins/
 
@@ -39,13 +44,7 @@ COPY --from=builder /go/src/github.com/jonas747/yagpdb/cmd/yagpdb/posts posts/
 COPY --from=builder /go/src/github.com/jonas747/yagpdb/cmd/yagpdb/static static/
 
 COPY --from=builder /go/bin/yagpdb .
+RUN setcap 'cap_net_bind_service=+ep' /app/yagpdb
 
-# add extra flags here when running YAGPDB
-# Set "-exthttps=true" if using a TLS-enabled proxy such as
-# jrcs/letsencrypt-nginx-proxy-companion
-# Set "-https=false" do disable https
-ENV extra_flags ""
-
-# `exec` allows us to receive shutdown signals.
-CMD exec /app/yagpdb -all -pa $extra_flags
-
+ENTRYPOINT [ "/app/docker-entrypoint.sh" ]
+CMD [ "/app/yagpdb", "-all", "-pa", "-exthttps=false", "-https=true" ]
